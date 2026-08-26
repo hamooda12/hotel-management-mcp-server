@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: hotel-management-mcp-server
+
+  ai:
+    mcp:
+      server:
+        name: hotel-management-mcp-server
+        version: 0.0.1
+        type: SYNC
+        protocol: STREAMABLE
+        instructions: |
+          MCP server for the Hotel Management system.
+          Tools expose hotel-domain operations backed by the existing REST API.
+
+server:
+  port: 8081
+
+hotel-management:
+  backend:
+    base-url: ${HOTEL_BACKEND_BASE_URL:http://localhost:8080}
