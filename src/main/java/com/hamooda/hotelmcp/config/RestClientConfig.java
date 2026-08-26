@@ -10,9 +10,8 @@ public class RestClientConfig {
 
     @Bean
     RestClient hotelBackendRestClient(
-            RestClient.Builder builder,
             @Value("${hotel-management.backend.base-url}") String baseUrl) {
-        return builder
+        return RestClient.builder()
                 .baseUrl(baseUrl)
                 .build();
     }
