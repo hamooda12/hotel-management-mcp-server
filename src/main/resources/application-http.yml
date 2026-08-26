@@ -1,0 +1,12 @@
+spring:
+  config:
+    activate:
+      on-profile: http
+  ai:
+    mcp:
+      server:
+        stdio: false
+        protocol: STREAMABLE
+
+server:
+  port: 8081
