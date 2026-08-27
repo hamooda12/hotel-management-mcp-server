@@ -34,4 +34,16 @@ public class HotelSearchTool {
 
         return response;
     }
+
+    @Tool(description = "Get detailed information about a hotel by its ID, including its room types.")
+    public Map<String, Object> getHotel(
+            @ToolParam(description = "The unique ID of the hotel.") Long id) {
+
+        String uri = "/api/hotels/" + id;
+
+        return hotelBackendRestClient.get()
+                .uri(uri)
+                .retrieve()
+                .body(Map.class);
+    }
 }
