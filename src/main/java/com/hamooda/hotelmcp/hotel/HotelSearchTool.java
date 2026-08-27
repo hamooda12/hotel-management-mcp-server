@@ -143,4 +143,13 @@ public class HotelSearchTool {
                 request
         );
     }
+
+    @Tool(description = "Cancel a hotel booking for the authenticated user. The backend applies its cancellation eligibility rules.")
+    public Map<String, Object> cancelBooking(
+            @ToolParam(description = "The unique ID of the booking to cancel.") Long bookingId) {
+
+        return authenticatedRestClient.patch(
+                "/api/bookings/" + bookingId + "/cancel"
+        );
+    }
 }
