@@ -128,4 +128,19 @@ public class HotelSearchTool {
                 request
         );
     }
+
+    @Tool(description = "Simulate a payment outcome for an initiated hotel payment. SUCCESS confirms the booking; FAILED leaves the booking pending.")
+    public Map<String, Object> simulatePayment(
+            @ToolParam(description = "The unique ID of the payment.") Long paymentId,
+            @ToolParam(description = "Payment outcome. Must be SUCCESS or FAILED.") String outcome) {
+
+        Map<String, Object> request = Map.of(
+                "outcome", outcome
+        );
+
+        return authenticatedRestClient.post(
+                "/api/payments/" + paymentId + "/simulate",
+                request
+        );
+    }
 }
