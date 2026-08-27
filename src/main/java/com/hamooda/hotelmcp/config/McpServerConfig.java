@@ -15,4 +15,6 @@ public class McpServerConfig {
                 .toolObjects(hotelSearchTool)
                 .build();
     }
+
+
 }
