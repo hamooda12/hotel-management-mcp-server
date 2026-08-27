@@ -114,4 +114,18 @@ public class HotelSearchTool {
 
         return authenticatedRestClient.get(uri);
     }
+
+    @Tool(description = "Create a payment intent for a pending hotel booking. The payment is initially created with INITIATED status.")
+    public Map<String, Object> createPaymentIntent(
+            @ToolParam(description = "The unique ID of the booking to create a payment intent for.") Long bookingId) {
+
+        Map<String, Object> request = Map.of(
+                "bookingId", bookingId
+        );
+
+        return authenticatedRestClient.post(
+                "/api/payments/intent",
+                request
+        );
+    }
 }
