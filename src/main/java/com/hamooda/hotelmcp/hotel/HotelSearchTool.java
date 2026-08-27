@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -70,7 +73,7 @@ public class HotelSearchTool {
             @ToolParam(description = "Hotel description. Optional.", required = false) String description,
             @ToolParam(description = "Email address of the hotel manager.") String managerEmail) {
 
-        Map<String, Object> request = new java.util.HashMap<>();
+        Map<String, Object> request = new HashMap<>();
         request.put("name", name);
         request.put("city", city);
         request.put("address", address);
@@ -81,6 +84,30 @@ public class HotelSearchTool {
 
         return authenticatedRestClient.post(
                 "/api/hotels",
+                request
+        );
+    }
+
+    @Tool(description = "Create a new room type for a specific hotel. The room type defines the room name, guest capacity, base price, amenities, and number of physical rooms available.")
+    public Map<String, Object> createRoomType(
+            @ToolParam(description = "The unique ID of the hotel where this room type will be created.") Long hotelId,
+            @ToolParam(description = "Room type name, such as Single, Double, Deluxe, or Suite.") String name,
+            @ToolParam(description = "Maximum number of guests the room type can accommodate. Must be at least 1.") Integer capacity,
+            @ToolParam(description = "Base price per room. Must be greater than 0.") BigDecimal basePrice,
+            @ToolParam(description = "Comma-separated or human-readable list of room amenities. Optional.", required = false) String amenities,
+            @ToolParam(description = "Number of physical rooms of this type available in the hotel. Must be at least 1.") Integer totalRooms) {
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("name", name);
+        request.put("capacity", capacity);
+        request.put("basePrice", basePrice);
+        request.put("totalRooms", totalRooms);
+        if (amenities != null && !amenities.isBlank()) {
+            request.put("amenities", amenities);
+        }
+
+        return authenticatedRestClient.post(
+                "/api/room-types/hotel/" + hotelId,
                 request
         );
     }
@@ -199,7 +226,7 @@ public class HotelSearchTool {
     }
 
     @Tool(description = "Get the booking history of the authenticated guest. Returns the guest's bookings across their booking history.")
-    public java.util.List<Map<String, Object>> getBookingHistory() {
+    public List<Map<String, Object>> getBookingHistory() {
 
         return authenticatedRestClient.getList(
                 "/api/bookings/guest-history"
