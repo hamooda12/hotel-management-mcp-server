@@ -1,6 +1,5 @@
 package com.hamooda.hotelmcp.auth;
 
-import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
@@ -41,6 +40,24 @@ public class AuthenticatedRestClient {
         }
     }
 
+    public Map<String, Object> get(String uri) {
+
+        try {
+            return executeGet(uri);
+        } catch (RestClientResponseException ex) {
+
+            if (ex.getStatusCode().value() != 401) {
+                throw ex;
+            }
+
+            if (!tokenManager.refreshAccessToken()) {
+                throw ex;
+            }
+
+            return executeGet(uri);
+        }
+    }
+
     private Map<String, Object> executePost(
             String uri,
             Map<String, Object> body) {
@@ -50,6 +67,16 @@ public class AuthenticatedRestClient {
                 .headers(headers ->
                         headers.setBearerAuth(tokenManager.getAccessToken()))
                 .body(body)
+                .retrieve()
+                .body(Map.class);
+    }
+
+    private Map<String, Object> executeGet(String uri) {
+
+        return restClient.get()
+                .uri(uri)
+                .headers(headers ->
+                        headers.setBearerAuth(tokenManager.getAccessToken()))
                 .retrieve()
                 .body(Map.class);
     }
