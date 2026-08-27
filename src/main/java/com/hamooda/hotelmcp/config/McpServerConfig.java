@@ -1,6 +1,7 @@
 package com.hamooda.hotelmcp.config;
 
 import com.hamooda.hotelmcp.auth.RegisterUserTool;
+import com.hamooda.hotelmcp.hotel.HotelDeletionTool;
 import com.hamooda.hotelmcp.hotel.HotelSearchTool;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
@@ -13,9 +14,10 @@ public class McpServerConfig {
     @Bean
     ToolCallbackProvider hotelTools(
             HotelSearchTool hotelSearchTool,
-            RegisterUserTool registerUserTool) {
+            RegisterUserTool registerUserTool,
+            HotelDeletionTool hotelDeletionTool) {
         return MethodToolCallbackProvider.builder()
-                .toolObjects(hotelSearchTool, registerUserTool)
+                .toolObjects(hotelSearchTool, registerUserTool, hotelDeletionTool)
                 .build();
     }
 
