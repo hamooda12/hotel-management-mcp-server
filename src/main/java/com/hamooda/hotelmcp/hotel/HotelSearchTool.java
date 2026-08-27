@@ -161,4 +161,12 @@ public class HotelSearchTool {
                 "/api/payments/" + paymentId
         );
     }
+
+    @Tool(description = "Get the booking history of the authenticated guest. Returns the guest's bookings across their booking history.")
+    public java.util.List<Map<String, Object>> getBookingHistory() {
+
+        return authenticatedRestClient.getList(
+                "/api/bookings/guest-history"
+        );
+    }
 }
