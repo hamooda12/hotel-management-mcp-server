@@ -100,6 +100,44 @@ public class AuthenticatedRestClient {
         }
     }
 
+    public Map<String, Object> put(
+            String uri,
+            Map<String, Object> body) {
+
+        try {
+            return executePut(uri, body);
+        } catch (RestClientResponseException ex) {
+
+            if (ex.getStatusCode().value() != 401) {
+                throw ex;
+            }
+
+            if (!tokenManager.refreshAccessToken()) {
+                throw ex;
+            }
+
+            return executePut(uri, body);
+        }
+    }
+
+    public void delete(String uri) {
+
+        try {
+            executeDelete(uri);
+        } catch (RestClientResponseException ex) {
+
+            if (ex.getStatusCode().value() != 401) {
+                throw ex;
+            }
+
+            if (!tokenManager.refreshAccessToken()) {
+                throw ex;
+            }
+
+            executeDelete(uri);
+        }
+    }
+
     public Map<String, Object> uploadImageFromUrl(
             String endpoint,
             String imageUrl,
@@ -195,6 +233,29 @@ public class AuthenticatedRestClient {
                         headers.setBearerAuth(tokenManager.getAccessToken()))
                 .retrieve()
                 .body(Map.class);
+    }
+
+    private Map<String, Object> executePut(
+            String uri,
+            Map<String, Object> body) {
+
+        return restClient.put()
+                .uri(uri)
+                .headers(headers ->
+                        headers.setBearerAuth(tokenManager.getAccessToken()))
+                .body(body)
+                .retrieve()
+                .body(Map.class);
+    }
+
+    private void executeDelete(String uri) {
+
+        restClient.delete()
+                .uri(uri)
+                .headers(headers ->
+                        headers.setBearerAuth(tokenManager.getAccessToken()))
+                .retrieve()
+                .toBodilessEntity();
     }
 
     private Map<String, Object> executeMultipart(
