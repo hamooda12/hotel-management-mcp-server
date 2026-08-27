@@ -112,6 +112,32 @@ public class HotelSearchTool {
         );
     }
 
+    @Tool(description = "Upload or replace the main image of a hotel using a publicly accessible HTTPS image URL. The MCP server downloads the image and uploads it to the hotel backend as multipart form data.")
+    public Map<String, Object> uploadHotelImage(
+            @ToolParam(description = "Hotel ID whose main image should be uploaded.") Long hotelId,
+            @ToolParam(description = "Public HTTPS URL of the image to use for the hotel.") String imageUrl,
+            @ToolParam(description = "Filename including a supported image extension such as .jpg, .jpeg, .png, .webp, or .gif. Optional; defaults to image.jpg.", required = false) String fileName) {
+
+        return authenticatedRestClient.uploadImageFromUrl(
+                "/api/hotels/" + hotelId + "/image",
+                imageUrl,
+                fileName
+        );
+    }
+
+    @Tool(description = "Upload or replace the main image of a room type using a publicly accessible HTTPS image URL. The MCP server downloads the image and uploads it to the hotel backend as multipart form data.")
+    public Map<String, Object> uploadRoomTypeImage(
+            @ToolParam(description = "Room type ID whose main image should be uploaded.") Long roomTypeId,
+            @ToolParam(description = "Public HTTPS URL of the image to use for the room type.") String imageUrl,
+            @ToolParam(description = "Filename including a supported image extension such as .jpg, .jpeg, .png, .webp, or .gif. Optional; defaults to image.jpg.", required = false) String fileName) {
+
+        return authenticatedRestClient.uploadImageFromUrl(
+                "/api/room-types/" + roomTypeId + "/image",
+                imageUrl,
+                fileName
+        );
+    }
+
     @Tool(description = "Get detailed information about a hotel by its ID, including its room types.")
     public Map<String, Object> getHotel(
             @ToolParam(description = "The unique ID of the hotel.") Long id) {
