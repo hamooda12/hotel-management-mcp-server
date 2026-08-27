@@ -88,6 +88,37 @@ public class HotelSearchTool {
         );
     }
 
+    @Tool(description = "Update an existing hotel. Requires the hotel ID, name, city, address, manager email, and optional description. Requires ADMIN or MANAGER authorization.")
+    public Map<String, Object> updateHotel(
+            @ToolParam(description = "The unique ID of the hotel to update.") Long hotelId,
+            @ToolParam(description = "Updated hotel name.") String name,
+            @ToolParam(description = "Updated city.") String city,
+            @ToolParam(description = "Updated hotel street address.") String address,
+            @ToolParam(description = "Updated hotel description. Optional.", required = false) String description,
+            @ToolParam(description = "Updated hotel manager email.") String managerEmail) {
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("name", name);
+        request.put("city", city);
+        request.put("address", address);
+        request.put("managerEmail", managerEmail);
+        if (description != null && !description.isBlank()) {
+            request.put("description", description);
+        }
+
+        return authenticatedRestClient.put(
+                "/api/hotels/" + hotelId,
+                request
+        );
+    }
+
+    @Tool(description = "Delete a hotel by ID. This is an administrative operation and requires ADMIN authorization.")
+    public void deleteHotel(
+            @ToolParam(description = "The unique ID of the hotel to delete.") Long hotelId) {
+
+        authenticatedRestClient.delete("/api/hotels/" + hotelId);
+    }
+
     @Tool(description = "Create a new room type for a specific hotel. The room type defines the room name, guest capacity, base price, amenities, and number of physical rooms available.")
     public Map<String, Object> createRoomType(
             @ToolParam(description = "The unique ID of the hotel where this room type will be created.") Long hotelId,
@@ -112,6 +143,97 @@ public class HotelSearchTool {
         );
     }
 
+    @Tool(description = "Search and browse room types using optional filters for amenities, name, capacity, total rooms, price, pagination, and sorting.")
+    public Map<String, Object> searchRoomTypes(
+            @ToolParam(description = "Filter by room amenities. Optional.", required = false) String amenities,
+            @ToolParam(description = "Text that should be contained in the room type name. Optional.", required = false) String nameContains,
+            @ToolParam(description = "Minimum guest capacity. Optional.", required = false) Integer minCapacity,
+            @ToolParam(description = "Maximum guest capacity. Optional.", required = false) Integer maxCapacity,
+            @ToolParam(description = "Minimum number of physical rooms. Optional.", required = false) Integer minTotalRooms,
+            @ToolParam(description = "Maximum number of physical rooms. Optional.", required = false) Integer maxTotalRooms,
+            @ToolParam(description = "Minimum base price. Optional.", required = false) BigDecimal minPrice,
+            @ToolParam(description = "Maximum base price. Optional.", required = false) BigDecimal maxPrice,
+            @ToolParam(description = "Zero-based page number. Optional; defaults to 0.", required = false) Integer page,
+            @ToolParam(description = "Number of room types per page. Optional; defaults to the backend default.", required = false) Integer size,
+            @ToolParam(description = "Sort expression such as 'id,desc', 'name,asc', 'capacity,asc', or 'basePrice,asc'. Optional.", required = false) String sort) {
+
+        UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/api/room-types");
+
+        addQueryParam(builder, "amenities", amenities);
+        addQueryParam(builder, "nameContains", nameContains);
+        addQueryParam(builder, "minCapacity", minCapacity);
+        addQueryParam(builder, "maxCapacity", maxCapacity);
+        addQueryParam(builder, "minTotalRooms", minTotalRooms);
+        addQueryParam(builder, "maxTotalRooms", maxTotalRooms);
+        addQueryParam(builder, "minPrice", minPrice);
+        addQueryParam(builder, "maxPrice", maxPrice);
+        addQueryParam(builder, "page", page);
+        addQueryParam(builder, "size", size);
+        addQueryParam(builder, "sort", sort);
+
+        return hotelBackendRestClient.get()
+                .uri(builder.toUriString())
+                .retrieve()
+                .body(Map.class);
+    }
+
+    private void addQueryParam(UriComponentsBuilder builder, String name, Object value) {
+        if (value != null && (!(value instanceof String) || !((String) value).isBlank())) {
+            builder.queryParam(name, value);
+        }
+    }
+
+    @Tool(description = "Get detailed information about a room type by its ID.")
+    public Map<String, Object> getRoomType(
+            @ToolParam(description = "The unique ID of the room type.") Long roomTypeId) {
+
+        return hotelBackendRestClient.get()
+                .uri("/api/room-types/" + roomTypeId)
+                .retrieve()
+                .body(Map.class);
+    }
+
+    @Tool(description = "Get all room types belonging to a specific hotel.")
+    public List<Map<String, Object>> getRoomTypesByHotel(
+            @ToolParam(description = "The unique ID of the hotel.") Long hotelId) {
+
+        return hotelBackendRestClient.get()
+                .uri("/api/room-types/hotel/" + hotelId)
+                .retrieve()
+                .body(List.class);
+    }
+
+    @Tool(description = "Update an existing room type. Requires the room type ID and the complete room type data. Requires ADMIN or MANAGER authorization.")
+    public Map<String, Object> updateRoomType(
+            @ToolParam(description = "The unique ID of the room type to update.") Long roomTypeId,
+            @ToolParam(description = "Updated room type name.") String name,
+            @ToolParam(description = "Updated maximum guest capacity. Must be at least 1.") Integer capacity,
+            @ToolParam(description = "Updated base price. Must be greater than 0.") BigDecimal basePrice,
+            @ToolParam(description = "Updated room amenities. Optional.", required = false) String amenities,
+            @ToolParam(description = "Updated number of physical rooms. Must be at least 1.") Integer totalRooms) {
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("name", name);
+        request.put("capacity", capacity);
+        request.put("basePrice", basePrice);
+        request.put("totalRooms", totalRooms);
+        if (amenities != null && !amenities.isBlank()) {
+            request.put("amenities", amenities);
+        }
+
+        return authenticatedRestClient.put(
+                "/api/room-types/" + roomTypeId,
+                request
+        );
+    }
+
+    @Tool(description = "Delete a room type by ID. This is an administrative operation and requires ADMIN authorization.")
+    public void deleteRoomType(
+            @ToolParam(description = "The unique ID of the room type to delete.") Long roomTypeId) {
+
+        authenticatedRestClient.delete("/api/room-types/" + roomTypeId);
+    }
+
     @Tool(description = "Upload or replace the main image of a hotel using a publicly accessible HTTPS image URL. The MCP server downloads the image and uploads it to the hotel backend as multipart form data.")
     public Map<String, Object> uploadHotelImage(
             @ToolParam(description = "Hotel ID whose main image should be uploaded.") Long hotelId,
@@ -125,7 +247,7 @@ public class HotelSearchTool {
         );
     }
 
-    @Tool(description = "Upload or replace the main image of a room type using a publicly accessible HTTPS image URL. The MCP server downloads the image and uploads it to the hotel backend as multipart form data.")
+    @Tool(description = "Upload or replace the main image of a room type using a publicly accessible HTTPS image URL. The MCP server downloads the image and uploads it to the room type backend as multipart form data.")
     public Map<String, Object> uploadRoomTypeImage(
             @ToolParam(description = "Room type ID whose main image should be uploaded.") Long roomTypeId,
             @ToolParam(description = "Public HTTPS URL of the image to use for the room type.") String imageUrl,
@@ -202,6 +324,25 @@ public class HotelSearchTool {
         String uri = "/api/bookings/" + id;
 
         return authenticatedRestClient.get(uri);
+    }
+
+    @Tool(description = "Get all hotel bookings. This administrative tool is available only to users with ADMIN or MANAGER authorization.")
+    public List<Map<String, Object>> getAllBookings() {
+
+        return authenticatedRestClient.getList("/api/bookings");
+    }
+
+    @Tool(description = "Get all bookings associated with a specific room type. This administrative tool is available only to users with ADMIN or MANAGER authorization.")
+    public List<Map<String, Object>> getBookingsForRoomType(
+            @ToolParam(description = "The unique ID of the room type.") Long roomTypeId) {
+
+        return authenticatedRestClient.getList("/api/bookings/room-types/" + roomTypeId);
+    }
+
+    @Tool(description = "Get upcoming bookings for the currently authenticated hotel manager. Requires MANAGER or ADMIN authorization.")
+    public List<Map<String, Object>> getManagerUpcomingBookings() {
+
+        return authenticatedRestClient.getList("/api/bookings/manager-upcoming");
     }
 
     @Tool(description = "Create a payment intent for a pending hotel booking. The payment is initially created with INITIATED status.")
