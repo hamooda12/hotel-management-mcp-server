@@ -105,4 +105,13 @@ public class HotelSearchTool {
                 request
         );
     }
+
+    @Tool(description = "Get detailed information about a booking by its ID. The authenticated user can access their own booking, while administrators and managers can access any booking.")
+    public Map<String, Object> getBooking(
+            @ToolParam(description = "The unique ID of the booking.") Long id) {
+
+        String uri = "/api/bookings/" + id;
+
+        return authenticatedRestClient.get(uri);
+    }
 }
