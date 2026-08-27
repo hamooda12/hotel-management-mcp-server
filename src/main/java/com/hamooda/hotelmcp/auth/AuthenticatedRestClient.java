@@ -1,9 +1,14 @@
 package com.hamooda.hotelmcp.auth;
 
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -95,6 +100,60 @@ public class AuthenticatedRestClient {
         }
     }
 
+    public Map<String, Object> uploadImageFromUrl(
+            String endpoint,
+            String imageUrl,
+            String fileName) {
+
+        URI source = URI.create(imageUrl);
+        if (!"https".equalsIgnoreCase(source.getScheme())) {
+            throw new IllegalArgumentException("Image URL must use HTTPS");
+        }
+
+        byte[] image = RestClient.create()
+                .get()
+                .uri(source)
+                .retrieve()
+                .body(byte[].class);
+
+        if (image == null || image.length == 0) {
+            throw new IllegalArgumentException("Image URL returned no content");
+        }
+
+        if (image.length > 5 * 1024 * 1024) {
+            throw new IllegalArgumentException("Image must be 5 MB or smaller");
+        }
+
+        String safeFileName = (fileName == null || fileName.isBlank())
+                ? "image.jpg"
+                : fileName;
+
+        ByteArrayResource resource = new ByteArrayResource(image) {
+            @Override
+            public String getFilename() {
+                return safeFileName;
+            }
+        };
+
+        MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
+        parts.add("file", resource);
+
+        try {
+            return executeMultipart(endpoint, parts);
+        } catch (RestClientResponseException ex) {
+
+            if (ex.getStatusCode().value() != 401) {
+                throw ex;
+            }
+
+            if (!tokenManager.refreshAccessToken()) {
+                throw ex;
+            }
+
+            return executeMultipart(endpoint, parts);
+        }
+    }
+
     private Map<String, Object> executePost(
             String uri,
             Map<String, Object> body) {
@@ -134,6 +193,20 @@ public class AuthenticatedRestClient {
                 .uri(uri)
                 .headers(headers ->
                         headers.setBearerAuth(tokenManager.getAccessToken()))
+                .retrieve()
+                .body(Map.class);
+    }
+
+    private Map<String, Object> executeMultipart(
+            String uri,
+            MultiValueMap<String, Object> parts) {
+
+        return restClient.post()
+                .uri(uri)
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .headers(headers ->
+                        headers.setBearerAuth(tokenManager.getAccessToken()))
+                .body(parts)
                 .retrieve()
                 .body(Map.class);
     }
