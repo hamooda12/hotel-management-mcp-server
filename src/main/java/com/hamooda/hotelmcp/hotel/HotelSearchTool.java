@@ -62,6 +62,29 @@ public class HotelSearchTool {
         }
     }
 
+    @Tool(description = "Create a new hotel in the hotel catalog. Requires hotel name, city, address, and manager email. Use this for hotel administration, not for booking a room.")
+    public Map<String, Object> createHotel(
+            @ToolParam(description = "Name of the hotel.") String name,
+            @ToolParam(description = "City where the hotel is located.") String city,
+            @ToolParam(description = "Hotel street address.") String address,
+            @ToolParam(description = "Hotel description. Optional.", required = false) String description,
+            @ToolParam(description = "Email address of the hotel manager.") String managerEmail) {
+
+        Map<String, Object> request = new java.util.HashMap<>();
+        request.put("name", name);
+        request.put("city", city);
+        request.put("address", address);
+        request.put("managerEmail", managerEmail);
+        if (description != null && !description.isBlank()) {
+            request.put("description", description);
+        }
+
+        return authenticatedRestClient.post(
+                "/api/hotels",
+                request
+        );
+    }
+
     @Tool(description = "Get detailed information about a hotel by its ID, including its room types.")
     public Map<String, Object> getHotel(
             @ToolParam(description = "The unique ID of the hotel.") Long id) {
