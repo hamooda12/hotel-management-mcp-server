@@ -152,4 +152,13 @@ public class HotelSearchTool {
                 "/api/bookings/" + bookingId + "/cancel"
         );
     }
+
+    @Tool(description = "Get detailed information about a payment by its ID. The authenticated user can access their own payment, while administrators and managers can access any payment.")
+    public Map<String, Object> getPayment(
+            @ToolParam(description = "The unique ID of the payment.") Long paymentId) {
+
+        return authenticatedRestClient.get(
+                "/api/payments/" + paymentId
+        );
+    }
 }
