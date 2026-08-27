@@ -23,30 +23,43 @@ public class HotelSearchTool {
         this.authenticatedRestClient = authenticatedRestClient;
     }
 
-    @Tool(description = "Search the hotel catalog using optional city and hotel-name filters. Returns a paginated list of matching hotels.")
+    @Tool(description = "Search and browse the hotel catalog. You can filter by city, hotel name, description, and creation date range, and control pagination and sorting. Use only the filters that are needed.")
     public Map<String, Object> searchHotels(
             @ToolParam(description = "City to filter hotels by. Optional.", required = false) String city,
-            @ToolParam(description = "Text that should be contained in the hotel name. Optional.", required = false) String nameContains) {
+            @ToolParam(description = "Text that should be contained in the hotel name. Optional.", required = false) String nameContains,
+            @ToolParam(description = "Text to search for in the hotel description. Optional.", required = false) String description,
+            @ToolParam(description = "Return hotels created before this date, in YYYY-MM-DD format. Optional.", required = false) String before,
+            @ToolParam(description = "Return hotels created after this date, in YYYY-MM-DD format. Optional.", required = false) String after,
+            @ToolParam(description = "Zero-based page number. Optional; defaults to 0.", required = false) Integer page,
+            @ToolParam(description = "Number of hotels per page. Optional; defaults to the backend default.", required = false) Integer size,
+            @ToolParam(description = "Sort expression such as 'id,desc', 'name,asc', or 'city,asc'. Optional.", required = false) String sort) {
 
-        String uri = UriComponentsBuilder.fromPath("/api/hotels")
-                .queryParamIfPresent(
-                        "city",
-                        java.util.Optional.ofNullable(city)
-                                .filter(value -> !value.isBlank())
-                )
-                .queryParamIfPresent(
-                        "nameContains",
-                        java.util.Optional.ofNullable(nameContains)
-                                .filter(value -> !value.isBlank())
-                )
-                .toUriString();
+        UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/api/hotels");
 
-        Map<String, Object> response = hotelBackendRestClient.get()
-                .uri(uri)
+        addQueryParam(builder, "city", city);
+        addQueryParam(builder, "nameContains", nameContains);
+        addQueryParam(builder, "description", description);
+        addQueryParam(builder, "before", before);
+        addQueryParam(builder, "after", after);
+
+        if (page != null) {
+            builder.queryParam("page", page);
+        }
+        if (size != null) {
+            builder.queryParam("size", size);
+        }
+        addQueryParam(builder, "sort", sort);
+
+        return hotelBackendRestClient.get()
+                .uri(builder.toUriString())
                 .retrieve()
                 .body(Map.class);
+    }
 
-        return response;
+    private void addQueryParam(UriComponentsBuilder builder, String name, String value) {
+        if (value != null && !value.isBlank()) {
+            builder.queryParam(name, value);
+        }
     }
 
     @Tool(description = "Get detailed information about a hotel by its ID, including its room types.")
