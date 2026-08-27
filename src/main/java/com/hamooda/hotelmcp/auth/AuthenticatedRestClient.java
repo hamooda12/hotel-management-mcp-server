@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -58,6 +59,24 @@ public class AuthenticatedRestClient {
         }
     }
 
+    public List<Map<String, Object>> getList(String uri) {
+
+        try {
+            return executeGetList(uri);
+        } catch (RestClientResponseException ex) {
+
+            if (ex.getStatusCode().value() != 401) {
+                throw ex;
+            }
+
+            if (!tokenManager.refreshAccessToken()) {
+                throw ex;
+            }
+
+            return executeGetList(uri);
+        }
+    }
+
     public Map<String, Object> patch(String uri) {
 
         try {
@@ -97,6 +116,16 @@ public class AuthenticatedRestClient {
                         headers.setBearerAuth(tokenManager.getAccessToken()))
                 .retrieve()
                 .body(Map.class);
+    }
+
+    private List<Map<String, Object>> executeGetList(String uri) {
+
+        return restClient.get()
+                .uri(uri)
+                .headers(headers ->
+                        headers.setBearerAuth(tokenManager.getAccessToken()))
+                .retrieve()
+                .body(List.class);
     }
 
     private Map<String, Object> executePatch(String uri) {
