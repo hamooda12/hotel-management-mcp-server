@@ -112,13 +112,6 @@ public class HotelSearchTool {
         );
     }
 
-    @Tool(description = "Delete a hotel by ID. This is an administrative operation and requires ADMIN authorization.")
-    public void deleteHotel(
-            @ToolParam(description = "The unique ID of the hotel to delete.") Long hotelId) {
-
-        authenticatedRestClient.delete("/api/hotels/" + hotelId);
-    }
-
     @Tool(description = "Create a new room type for a specific hotel. The room type defines the room name, guest capacity, base price, amenities, and number of physical rooms available.")
     public Map<String, Object> createRoomType(
             @ToolParam(description = "The unique ID of the hotel where this room type will be created.") Long hotelId,
@@ -225,13 +218,6 @@ public class HotelSearchTool {
                 "/api/room-types/" + roomTypeId,
                 request
         );
-    }
-
-    @Tool(description = "Delete a room type by ID. This is an administrative operation and requires ADMIN authorization.")
-    public void deleteRoomType(
-            @ToolParam(description = "The unique ID of the room type to delete.") Long roomTypeId) {
-
-        authenticatedRestClient.delete("/api/room-types/" + roomTypeId);
     }
 
     @Tool(description = "Upload or replace the main image of a hotel using a publicly accessible HTTPS image URL. The MCP server downloads the image and uploads it to the hotel backend as multipart form data.")
