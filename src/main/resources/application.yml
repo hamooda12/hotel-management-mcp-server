@@ -18,4 +18,4 @@ server:
 
 hotel-management:
   backend:
-    base-url: ${HOTEL_BACKEND_BASE_URL:http://localhost:8080}
+    base-url: https://hotel-management-monolith-backend.onrender.com/
