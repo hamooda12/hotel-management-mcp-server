@@ -18,6 +18,7 @@ public class ChatManagementTool {
 
     @Tool(
             name = "delete_chat",
+            returnDirect = true,
             description = "Permanently delete the authenticated user's persisted AI chat history for the supplied conversation ID. Use only when the user explicitly asks to delete, clear, erase, or forget the current chat. This deletes conversation history, not long-term user memory."
     )
     public Map<String, Object> deleteChat(
