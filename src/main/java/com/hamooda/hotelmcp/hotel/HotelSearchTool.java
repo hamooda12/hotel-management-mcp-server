@@ -25,7 +25,7 @@ public class HotelSearchTool {
         this.authenticatedRestClient = authenticatedRestClient;
     }
 
-    @Tool(description = "Find hotels in the hotel catalog. Use this tool FIRST whenever the user asks about a specific hotel by name. For a hotel-name question, pass the hotel's name or a distinctive part of it in nameContains, use page=0, and use a small size such as 5. The result contains hotel IDs needed by getHotel. This is the source of truth for hotel catalog data; do not use RAG instead.")
+    @Tool(description = "Find hotels in the hotel catalog. Use this tool FIRST whenever the user asks about a specific hotel by name. For a hotel-name question, pass the hotel's name or a distinctive part of it in nameContains, use page=0, and use a small size such as 5. The result contains hotel IDs needed by getHotel and room type IDs needed for booking. This is the source of truth for hotel catalog data; do not use RAG instead.")
     public Map<String, Object> searchHotels(
             @ToolParam(description = "City to filter hotels by. Optional.", required = false) String city,
             @ToolParam(description = "Part of the hotel name to search for. REQUIRED when looking up a specific hotel by name.", required = false) String nameContains,
@@ -191,10 +191,10 @@ public class HotelSearchTool {
         return authenticatedRestClient.uploadImageFromUrl("/api/room-types/" + roomTypeId + "/image", imageUrl, fileName);
     }
 
-    @Tool(description = "Check room availability and total price for a hotel room type for specific dates and number of guests.")
+    @Tool(description = "Check room availability and total price for a hotel room type for specific dates and number of guests. The roomTypeId MUST belong to hotelId; resolve the hotel with searchHotels/getHotel first.")
     public Map<String, Object> checkAvailability(
-            @ToolParam(description = "The unique ID of the hotel.") Long hotelId,
-            @ToolParam(description = "The unique ID of the room type.") Long roomTypeId,
+            @ToolParam(description = "The unique ID of the hotel returned by searchHotels/getHotel.") Long hotelId,
+            @ToolParam(description = "The unique ID of the room type belonging to hotelId.") Long roomTypeId,
             @ToolParam(description = "Check-in date in YYYY-MM-DD format.") String checkinDate,
             @ToolParam(description = "Check-out date in YYYY-MM-DD format.") String checkoutDate,
             @ToolParam(description = "Number of guests.") Integer guests) {
@@ -207,19 +207,25 @@ public class HotelSearchTool {
         return hotelBackendRestClient.post().uri("/api/availability/check").body(request).retrieve().body(Map.class);
     }
 
-    @Tool(description = "Create a hotel booking for the authenticated user.")
+    @Tool(description = "Create a hotel booking for the authenticated user. ALWAYS resolve the requested hotel with searchHotels, resolve its room type with getRoomTypesByHotel, and call checkAvailability before calling this tool. Pass BOTH hotelId and roomTypeId from those tool results. Never infer or invent IDs, and never report a hotel as missing if searchHotels returned it.")
     public Map<String, Object> createBooking(
-            @ToolParam(description = "Guest email for the booking.") String guestEmail,
-            @ToolParam(description = "The unique ID of the room type.") Long roomTypeId,
+            @ToolParam(description = "Guest email for the booking. Use the authenticated user's email for a normal guest booking; do not invent an identity.") String guestEmail,
+            @ToolParam(description = "The unique ID of the hotel returned by searchHotels/getHotel. This must be the hotel the user selected.") Long hotelId,
+            @ToolParam(description = "The unique ID of the room type returned by getRoomTypesByHotel for the same hotelId.") Long roomTypeId,
             @ToolParam(description = "Check-in date in YYYY-MM-DD format.") String checkIn,
             @ToolParam(description = "Check-out date in YYYY-MM-DD format.") String checkOut,
             @ToolParam(description = "Number of guests.") Integer guests) {
+        if (hotelId == null || roomTypeId == null) {
+            throw new IllegalArgumentException("hotelId and roomTypeId are required to create a booking");
+        }
+
         Map<String, Object> request = Map.of(
                 "guestEmail", guestEmail,
                 "roomTypeId", roomTypeId,
                 "checkIn", checkIn,
                 "checkOut", checkOut,
                 "guests", guests);
+
         return authenticatedRestClient.post("/api/bookings", request);
     }
 
