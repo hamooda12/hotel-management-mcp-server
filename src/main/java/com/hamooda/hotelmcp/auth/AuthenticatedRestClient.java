@@ -33,12 +33,14 @@ public class AuthenticatedRestClient {
         try {
             return executePost(uri, body);
         } catch (RestClientResponseException ex) {
-
             if (ex.getStatusCode().value() != 401) {
                 throw ex;
             }
 
-            if (!tokenManager.refreshAccessToken()) {
+            // A frontend user's JWT belongs to that user and can only be
+            // refreshed by the frontend. Never replace it with the MCP
+            // server's configured service token.
+            if (tokenManager.hasRequestAccessToken() || !tokenManager.refreshAccessToken()) {
                 throw ex;
             }
 
@@ -51,12 +53,11 @@ public class AuthenticatedRestClient {
         try {
             return executeGet(uri);
         } catch (RestClientResponseException ex) {
-
             if (ex.getStatusCode().value() != 401) {
                 throw ex;
             }
 
-            if (!tokenManager.refreshAccessToken()) {
+            if (tokenManager.hasRequestAccessToken() || !tokenManager.refreshAccessToken()) {
                 throw ex;
             }
 
@@ -69,12 +70,11 @@ public class AuthenticatedRestClient {
         try {
             return executeGetList(uri);
         } catch (RestClientResponseException ex) {
-
             if (ex.getStatusCode().value() != 401) {
                 throw ex;
             }
 
-            if (!tokenManager.refreshAccessToken()) {
+            if (tokenManager.hasRequestAccessToken() || !tokenManager.refreshAccessToken()) {
                 throw ex;
             }
 
@@ -87,12 +87,11 @@ public class AuthenticatedRestClient {
         try {
             return executePatch(uri);
         } catch (RestClientResponseException ex) {
-
             if (ex.getStatusCode().value() != 401) {
                 throw ex;
             }
 
-            if (!tokenManager.refreshAccessToken()) {
+            if (tokenManager.hasRequestAccessToken() || !tokenManager.refreshAccessToken()) {
                 throw ex;
             }
 
@@ -107,12 +106,11 @@ public class AuthenticatedRestClient {
         try {
             return executePut(uri, body);
         } catch (RestClientResponseException ex) {
-
             if (ex.getStatusCode().value() != 401) {
                 throw ex;
             }
 
-            if (!tokenManager.refreshAccessToken()) {
+            if (tokenManager.hasRequestAccessToken() || !tokenManager.refreshAccessToken()) {
                 throw ex;
             }
 
@@ -125,12 +123,11 @@ public class AuthenticatedRestClient {
         try {
             executeDelete(uri);
         } catch (RestClientResponseException ex) {
-
             if (ex.getStatusCode().value() != 401) {
                 throw ex;
             }
 
-            if (!tokenManager.refreshAccessToken()) {
+            if (tokenManager.hasRequestAccessToken() || !tokenManager.refreshAccessToken()) {
                 throw ex;
             }
 
@@ -179,12 +176,11 @@ public class AuthenticatedRestClient {
         try {
             return executeMultipart(endpoint, parts);
         } catch (RestClientResponseException ex) {
-
             if (ex.getStatusCode().value() != 401) {
                 throw ex;
             }
 
-            if (!tokenManager.refreshAccessToken()) {
+            if (tokenManager.hasRequestAccessToken() || !tokenManager.refreshAccessToken()) {
                 throw ex;
             }
 
